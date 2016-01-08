@@ -1,0 +1,5 @@
+<config>
+    <sever name="ServidorFamilySimpson" ip="" puerto="8687"/>
+    <database path="./registered.txt"/>
+    <log path="./log_pr.txt"/>
+</config>
