@@ -107,5 +107,3 @@ if data[0] == "SIP/2.0 401 Unauthorized":
     my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
     data = my_socket.recv(1024)
     print(data.decode('utf-8'))
-
-
