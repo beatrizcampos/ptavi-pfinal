@@ -2,11 +2,13 @@
 # -*- coding: utf-8 -*-
 
 """
-Programa cliente
+Programa Cliente
 """
 
 
 import sys
+import socket
+import hashlib
 
 try:
     CONFIG = sys.argv[1]
@@ -14,19 +16,21 @@ try:
     OPTION = sys.argv[3]
 
 except IndexError:
-    print("Usage: python uaclient.py config method option")
+    sys.exit("Usage: python uaclient.py config method option")
 
 # Abrimos fichero xml para coger informacion
 fich = open(CONFIG, 'r')
 line = fich.readlines()
 fich.close()
 
-#Conseguimos nombre de usuario (linea 3-xml)
+#Conseguimos nombre de usuario y contraseña (linea 3-xml)
 line_account = line[3].split(">")
 account = line_account[0].split("=")[1]
 USERNAME = account.split(" ")[0][1:-1]
-print("imprimimos nombre:   " , USERNAME)
-
+print("imprimimos nombre:   ", USERNAME)
+passw = line_account[0].split("=")[2]
+PASSWORD = passw.split(" ")[0][1:-2]
+print("imprimimos contraseña:   ", PASSWORD)
 #IP
 line_uaserver = line[4].split(">")
 uaserver = line_uaserver[0].split("=")[1]
@@ -65,4 +69,41 @@ line_audio = line[8].split(">")
 audio = line_audio[0].split("=")[1]
 PATH_AUDIO = audio.split(" ")[0][1:-2]
 print(PATH_AUDIO)
+
+
+# Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
+my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+my_socket.connect((IP_PROXY, int(PUERTO_PROXY)))
+
+
+#METODO REGISTER
+if METHOD == 'REGISTER':
+    LINE = METHOD + ' sip:' + USERNAME + ':' + PUERTO + ' SIP/2.0\r\n'
+    LINE += "Expires: " + OPTION + "\r\n"
+    print("Enviando: \r\n" + LINE)
+
+
+# Enviamos la petición
+my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+# Recibimos respuesta
+data = my_socket.recv(1024)
+print('Recibido;\r\n', data.decode('utf-8'))
+
+
+#Estudiamos respuesta
+data = data.decode('utf-8').split("\r\n")
+print(data[0])
+
+if data[0] == "SIP/2.0 401 Unauthorized":
+    #Añadimos cabecera autenticación (FUNCION HASH)
+    m = hashlib.md5()
+    nonce = data[1].split("=")[-1]
+    print(nonce)
+    m.update(bytes(PASSWORD, 'utf-8'))
+    m.update(bytes(nonce, 'utf-8'))
+    LINE += "Authorization: response=" + m.hexdigest() + "\r\n"
+    my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+    print("Enviando: \r\n" + LINE)
+
 
