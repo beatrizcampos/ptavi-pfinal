@@ -10,6 +10,7 @@ import sys
 import socketserver
 import hashlib
 import csv
+import time
 
 
 try:
@@ -23,8 +24,23 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
     """
     Proxy server class
     """
-    Dicc_Users = {}
+    usuarios_registrados = {}
 
+    def register2file(self):
+        """
+        Base de datos de usuarios registrados
+        """
+        
+        fich1 = open(PATH_DATABASE, 'w')
+        fich1.write("User\tIP\tPuerto\tFecha de Registro\tExpires\r\n")
+
+        for usuario in self.usuarios_registrados.keys():
+            IP = self.usuarios_registrados[usuario][0]
+            puerto = self.usuarios_registrados[usuario][1]
+            hora_actual = self.usuarios_registrados[usuario][2]
+            hora_exp = self.usuarios_registrados[usuario][3]
+            fich1.write(usuario + '\t' + IP + '\t' + str(puerto)
+                + '\t' + str(hora_actual) + '\t' + str(hora_exp) + '\r\n')
 
     def handle(self):
         # Escribe dirección y puerto del cliente (de tupla client_address)
@@ -79,8 +95,16 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                     m.update(bytes(str(nonce), 'utf-8'))   
                     if m.hexdigest() == response:
                         answer = "SIP/2.0 200 OK\r\n\r\n"
-                        print("MANDAMOS :\r\n", answer)
+                        print("Enviamos :\r\n", answer)
                         self.wfile.write(bytes(answer, 'utf-8'))
+                        #Registramos al usuario
+                        #puerto = int(line[1].split(':')[2])
+                        hora_actual = time.time()
+                        hora_exp = hora_actual + expires
+                        informacion = [IP_CLIENT, puerto_client2, hora_actual, hora_exp]
+                        self.usuarios_registrados[direccionsip_client2] = informacion
+                        print(self.usuarios_registrados)
+                        self.register2file()
                     else:
                         answer = "SIP/2.0 401 Unauthorized\r\n"
                         answer += "WWW Authenticate: nonce="
@@ -114,7 +138,7 @@ if __name__ == "__main__":
     # Database
     line_database = line[2].split(">")    
     database = line_database[0].split("=")[1]
-    PATH_DATABASE = database.split(" ")[0][1:-2]
+    PATH_DATABASE = database.split(" ")[0][1:-1]
     print(PATH_DATABASE)
     path_password = line_database[0].split("=")[2]
     PASSWORDS_DATABASE = path_password.split("=")[0][1:-2]
@@ -134,7 +158,6 @@ if __name__ == "__main__":
             linea_usuario = linea[0].split(':')
             passwords_usuarios[linea_usuario[0]] = linea_usuario[-1]
         print(passwords_usuarios)
-
 
     serv = socketserver.UDPServer(((IP_SERVER, int(PUERTO_SERVER))), ProxyHandler)
     print("Server " + NAME_SERVER +  " listening at port " + str(PUERTO_SERVER))
