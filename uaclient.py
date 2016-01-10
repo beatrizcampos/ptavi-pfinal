@@ -83,6 +83,15 @@ if METHOD == 'REGISTER':
     LINE += "Expires: " + OPTION + "\r\n"
     print("Enviando: \r\n" + LINE)
 
+elif METHOD == 'INVITE':
+    # Añadimos cabeceras 
+    LINE = "INVITE " + "sip:" + OPTION + " SIP/2.0\r\n"
+    LINE += "Content-Type: application/sdp\r\n\r\n"
+    LINE += "v=0\r\n" + "o=" + USERNAME + " " + IP + " \r\n"
+    LINE += "s=SIP's PARTY" + "\r\n" + "t=0" + "\r\n"
+    LINE += "m=audio " + PUERTO_RTP + " RTP" + "\r\n"
+    print("Enviando: \r\n" + LINE)
+
 
 # Enviamos la petición
 my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
