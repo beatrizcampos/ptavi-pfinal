@@ -7,6 +7,7 @@ Programa User Agent Server
 
 
 import sys
+import socketserver
 import socket
 
 try:
@@ -16,8 +17,42 @@ except IndexError:
     sys.exit("Usage: python uaserver.py config")
 
 
+class ProxyHandler(socketserver.DatagramRequestHandler):
+    """
+    Proxy server class
+    """
+    def handle(self):
+        # Escribe dirección y puerto del cliente (de tupla client_address)
+        IP_CLIENT = str(self.client_address[0])
+        #self.wfile.write(b"Hemos recibido tu peticion")
+        while 1:
+            # Leyendo línea a línea lo que nos envía el cliente
+            line = self.rfile.read()
+            method_client = line.decode('utf-8').split(' ')[0]
+            # Si no hay más líneas salimos del bucle infinito
+            if not line:
+                break
+            print("El cliente nos manda: \r\n" + line.decode('utf-8'))
+            if method_client == "INVITE":
+                # Mandamos código respuesta
+                Destinatario = line.split(' ')[2]
+                Puerto_RTP = line.split(' ')[6]
+                answer = ("SIP/2.0 100 Trying" + '\r\n\r\n' +
+                            "SIP/2.0 180 Ringing" + '\r\n\r\n' +
+                            "SIP/2.0 200 OK" + '\r\n\r\n')
+                answer += "Content-Type: application/sdp\r\n\r\n"
+                answer += "v=0\r\n" + "o=" + USERNAME + " " + IP + " \r\n"
+                answer += "s=SIP's PARTY" + "\r\n" + "t=0" + "\r\n"
+                answer += "m=audio " + PUERTO_RTP + " RTP" + "\r\n"
+                
+                print(" Mandamos: ' \r\n' ", answer)
+                self.wfile.write(bytes(answer, 'utf-8'))
+
+
+
 
 if __name__ == "__main__":
+
     # Abrimos fichero xml para coger informacion
     fich = open(CONFIG, 'r')
     line = fich.readlines()
@@ -74,3 +109,7 @@ print(PATH_AUDIO)
 my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 my_socket.connect((IP_PROXY, int(PUERTO_PROXY)))
+
+
+#serv = socketserver.UDPServer(((IP_PROXY, int(PUERTO_PROXY))), ProxyHandler)
+#serv.serve_forever()
