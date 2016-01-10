@@ -69,3 +69,8 @@ line_audio = line[8].split(">")
 audio = line_audio[0].split("=")[1]
 PATH_AUDIO = audio.split(" ")[0][1:-2]
 print(PATH_AUDIO)
+
+# Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
+my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+my_socket.connect((IP_PROXY, int(PUERTO_PROXY)))
