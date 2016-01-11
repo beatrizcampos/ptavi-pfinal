@@ -57,6 +57,7 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
             # Si no hay más líneas salimos del bucle infinito
             if not line:
                 break
+
             print("El cliente nos manda: \r\n" + line.decode('utf-8'))
 
             if method_client == "REGISTER":
@@ -134,7 +135,20 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                     # Usuario no registrado
                     answer = "SIP/2.0 404 User Not Found\r\n"
                     self.wfile.write(bytes(answer, 'utf-8') + b'\r\n')
-        
+
+            elif method_client == "ACK":
+                linea_troceada = line.decode('utf-8').split(" ")
+                destinatario_invite = linea_troceada[1].split(':')[1]
+                IP_DESTINO = self.usuarios_registrados[destinatario_invite][0]
+                PUERTO_DESTINO = self.usuarios_registrados[destinatario_invite][1]
+                print("Se lo enviamos a: " ,destinatario_invite)  
+                print("con IP: " , IP_DESTINO," y PUERTO: " , PUERTO_DESTINO)       
+                # Creamos socket
+                my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                my_socket.connect((IP_DESTINO, int(PUERTO_DESTINO)))
+                my_socket.send(line)
+
 
 if __name__ == "__main__":
     """
