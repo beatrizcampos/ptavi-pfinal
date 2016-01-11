@@ -100,11 +100,11 @@ data = my_socket.recv(1024)
 print('Recibido;\r\n', data.decode('utf-8'))
 
 
-#Estudiamos respuesta
+# Estudiamos respuesta
 data = data.decode('utf-8').split("\r\n")
 
 if data[0] == "SIP/2.0 401 Unauthorized":
-    #Añadimos cabecera autenticación (FUNCION HASH)
+    # Añadimos cabecera autenticación (FUNCION HASH)
     m = hashlib.md5()
     nonce = data[1].split("=")[-1]
     print(nonce)
@@ -115,3 +115,12 @@ if data[0] == "SIP/2.0 401 Unauthorized":
     my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
     data = my_socket.recv(1024)
     print(data.decode('utf-8'))
+
+elif data[0] =="SIP/2.0 100 Trying":
+    # Metodo de asentimiento. ACK sip:receptor SIP/2.0
+    METHOD = 'ACK'
+    LINE = METHOD + ' sip:' + OPTION + ' SIP/2.0\r\n'
+    print("Enviando: \r\n" + LINE)
+    my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+
+
