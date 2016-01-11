@@ -46,9 +46,13 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                 answer += "v=0\r\n" + "o=" + USERNAME + " " + IP + " \r\n"
                 answer += "s=SIP's PARTY" + "\r\n" + "t=0" + "\r\n"
                 answer += "m=audio " + PUERTO_RTP + " RTP" + "\r\n"
-                print(" Mandamos: ' \r\n", answer)
+                print(" Codigo respuesta a INVITE:  \r\n", answer)
                 self.wfile.write(bytes(answer, 'utf-8'))
 
+            elif method_client == "BYE":
+                answer = "SIP/2.0 200 OK\r\n"
+                print(" Codigo respuesta a BYE:  \r\n", answer)
+                self.wfile.write(bytes(answer, 'utf-8'))
 
 if __name__ == "__main__":
 
