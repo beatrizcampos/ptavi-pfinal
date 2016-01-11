@@ -16,6 +16,7 @@ try:
 except IndexError:
     sys.exit("Usage: python uaserver.py config")
 
+print("Listening...")
 
 class ProxyHandler(socketserver.DatagramRequestHandler):
     """
@@ -35,8 +36,8 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
             print("El cliente nos manda: \r\n" + line.decode('utf-8'))
             if method_client == "INVITE":
                 # Mandamos código respuesta
-                Destinatario = line.split(' ')[2]
-                Puerto_RTP = line.split(' ')[6]
+                #Destinatario = line.split(' ')[2]
+                #Puerto_RTP = line.split(' ')[6]
                 answer = ("SIP/2.0 100 Trying" + '\r\n\r\n' +
                             "SIP/2.0 180 Ringing" + '\r\n\r\n' +
                             "SIP/2.0 200 OK" + '\r\n\r\n')
@@ -45,10 +46,8 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                 answer += "s=SIP's PARTY" + "\r\n" + "t=0" + "\r\n"
                 answer += "m=audio " + PUERTO_RTP + " RTP" + "\r\n"
                 
-                print(" Mandamos: ' \r\n' ", answer)
+                print(" Mandamos: ' \r\n", answer)
                 self.wfile.write(bytes(answer, 'utf-8'))
-
-
 
 
 if __name__ == "__main__":
@@ -111,5 +110,5 @@ my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 my_socket.connect((IP_PROXY, int(PUERTO_PROXY)))
 
 
-#serv = socketserver.UDPServer(((IP_PROXY, int(PUERTO_PROXY))), ProxyHandler)
-#serv.serve_forever()
+serv = socketserver.UDPServer(((IP, int(PUERTO))), ProxyHandler)
+serv.serve_forever()
