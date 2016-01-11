@@ -102,7 +102,6 @@ print('Recibido;\r\n', data.decode('utf-8'))
 
 #Estudiamos respuesta
 data = data.decode('utf-8').split("\r\n")
-print(data[0])
 
 if data[0] == "SIP/2.0 401 Unauthorized":
     #Añadimos cabecera autenticación (FUNCION HASH)
