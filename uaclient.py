@@ -84,7 +84,7 @@ if METHOD == 'REGISTER':
     print("Enviando: \r\n" + LINE)
 
 elif METHOD == 'INVITE':
-    # Añadimos cabeceras 
+    # Añadimos cabeceras
     LINE = "INVITE " + "sip:" + OPTION + " SIP/2.0\r\n"
     LINE += "Content-Type: application/sdp\r\n\r\n"
     LINE += "v=0\r\n" + "o=" + USERNAME + " " + IP + " \r\n"
@@ -116,11 +116,9 @@ if data[0] == "SIP/2.0 401 Unauthorized":
     data = my_socket.recv(1024)
     print(data.decode('utf-8'))
 
-elif data[0] =="SIP/2.0 100 Trying":
+elif data[0] == "SIP/2.0 100 Trying":
     # Metodo de asentimiento. ACK sip:receptor SIP/2.0
     METHOD = 'ACK'
     LINE = METHOD + ' sip:' + OPTION + ' SIP/2.0\r\n'
     print("Enviando: \r\n" + LINE)
     my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
-
-
