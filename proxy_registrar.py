@@ -8,6 +8,7 @@ Programa Proxy
 
 import sys
 import socketserver
+import socket
 import hashlib
 import csv
 import time
@@ -32,6 +33,7 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
         """
         
         fich1 = open(PATH_DATABASE, 'w')
+        fich1.write("FICHERO DE TEXTO CON LOS USUARIOS REGISTRADOS\r\n\r\n")
         fich1.write("User\tIP\tPuerto\tFecha de Registro\tExpires\r\n")
 
         for usuario in self.usuarios_registrados.keys():
@@ -111,6 +113,27 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                         answer += str(nonce) + "\r\n\r\n"
                         self.wfile.write(bytes(answer, 'utf-8'))       
 
+            elif method_client == "INVITE":
+                # Enviamos INVITE a destinatorio correspondiente
+                linea_troceada = line.decode('utf-8').split(" ")
+                destinatario_invite = linea_troceada[1].split(':')[1]
+                print("Se lo enviamos a: " ,destinatario_invite)
+                if destinatario_invite in self.usuarios_registrados:
+                    IP_DESTINO = self.usuarios_registrados[destinatario_invite][0]
+                    PUERTO_DESTINO = self.usuarios_registrados[destinatario_invite][1]
+
+                    # Creamos socket
+                    my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                    my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    my_socket.connect((IP_DESTINO, int(PUERTO_DESTINO)))
+                    my_socket.send(line)
+                    data = my_socket.recv(1024)
+                    # Reenviamos al cliente
+                    self.wfile.write(data)
+                else:
+                    # Usuario no registrado
+                    answer = "SIP/2.0 404 User Not Found\r\n"
+                    self.wfile.write(bytes(answer, 'utf-8') + b'\r\n')
         
 
 if __name__ == "__main__":
