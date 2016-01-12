@@ -80,7 +80,7 @@ my_socket.connect((IP_PROXY, int(PUERTO_PROXY)))
 #METODO REGISTER
 if METHOD == 'REGISTER':
     LINE = METHOD + ' sip:' + USERNAME + ':' + PUERTO + ' SIP/2.0\r\n'
-    LINE += "Expires: " + OPTION + "\r\n"   
+    LINE += "Expires: " + OPTION + "\r\n"
 
 elif METHOD == 'INVITE':
     # Añadimos cabeceras
@@ -92,14 +92,14 @@ elif METHOD == 'INVITE':
 
 elif METHOD == 'BYE':
     #BYE sip:receptor SIP/2.0
-    LINE = METHOD + " sip:" + OPTION + " SIP/2.0\r\n"    
+    LINE = METHOD + " sip:" + OPTION + " SIP/2.0\r\n"
 
 # Enviamos la petición
 print("Enviando: \r\n" + LINE)
 my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
 # Recibimos respuesta
 data = my_socket.recv(1024)
-print('Recibido;\r\n', data.decode('utf-8'))
+print('Recibido: \r\n', data.decode('utf-8'))
 
 
 # Estudiamos respuesta
