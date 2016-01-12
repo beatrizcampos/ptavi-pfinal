@@ -35,6 +35,8 @@ print("imprimimos contraseña:   ", PASSWORD)
 line_uaserver = line[4].split(">")
 uaserver = line_uaserver[0].split("=")[1]
 IP = uaserver.split(" ")[0][1:-1]
+if not IP:
+    IP = "127.0.0.1"
 print("Imprimimos IP:   ", IP)
 
 #PUERTO
