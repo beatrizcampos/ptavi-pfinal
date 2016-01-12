@@ -23,6 +23,8 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
     """
     Proxy server class
     """
+    RTP = {'ip': '', 'puerto': 0}
+
     def handle(self):
         # Escribe dirección y puerto del cliente (de tupla client_address)
         IP_CLIENT = str(self.client_address[0])
@@ -31,14 +33,17 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
             # Leyendo línea a línea lo que nos envía el cliente
             line = self.rfile.read()
             method_client = line.decode('utf-8').split(' ')[0]
+            linea_deco = line.decode('utf-8').split(' ')
             # Si no hay más líneas salimos del bucle infinito
             if not line:
                 break
             print("El cliente nos manda: \r\n" + line.decode('utf-8'))
             if method_client == "INVITE":
                 # Mandamos código respuesta
-                #Destinatario = line.split(' ')[2]
-                #Puerto_RTP = line.split(' ')[6]
+                IP_RTPDESTINO = linea_deco[4].split("\r\n")[0]
+                PUERTO_RTPDESTINO = linea_deco[7].split(" ")[-1]
+                print(IP_RTPDESTINO)
+                print(str(PUERTO_RTPDESTINO))
                 answer = ("SIP/2.0 100 Trying" + '\r\n\r\n' +
                           "SIP/2.0 180 Ringing" + '\r\n\r\n' +
                           "SIP/2.0 200 OK" + '\r\n\r\n')
@@ -53,6 +58,13 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                 answer = "SIP/2.0 200 OK\r\n"
                 print(" Codigo respuesta a BYE:  \r\n", answer)
                 self.wfile.write(bytes(answer, 'utf-8'))
+
+            elif method_client == "ACK":
+                #Comenzamos envio RTP                
+                aEjecutar = "./mp32rtp -i " + IP_RTPDESTINO + " -p " + PUERTO_RTPDESTINO
+                aEjecutar += " < " + PATH_AUDIO
+                print("Vamos a ejecutar", aEjecutar)
+                os.system(aEjecutar)
 
 if __name__ == "__main__":
 
