@@ -76,7 +76,13 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                         answer = ("SIP/2.0 401 Unauthorized" + '\r\n')
                         answer += "WWW Authenticate: nonce="
                         answer += str(nonce) + "\r\n\r\n"
-                        self.wfile.write(bytes(answer, 'utf-8'))
+                        self.wfile.write(bytes(answer, 'utf-8') + b'\r\n')
+                    elif expires == 0:
+                        # Borramos a usuario expirado
+                        #del self.usuarios_registrados[direccionsip_client2]
+                        print("Borramos: " , direccionsip_usuario)
+                        answer = "SIP/2.0 200 OK\r\n "
+                        self.wfile.write((bytes(answer, 'utf-8')) + b'\r\n')
 
                 else:
                     # Comprobamos el response
@@ -98,7 +104,7 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                     if m.hexdigest() == response:
                         answer = "SIP/2.0 200 OK\r\n\r\n"
                         print("Enviamos :\r\n", answer)
-                        self.wfile.write(bytes(answer, 'utf-8'))
+                        self.wfile.write(bytes(answer, 'utf-8') + b'\r\n')
                         #Registramos al usuario
                         #puerto = int(line[1].split(':')[2])
                         hora_actual = time.time()
@@ -112,7 +118,7 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                         answer = "SIP/2.0 401 Unauthorized\r\n"
                         answer += "WWW Authenticate: nonce="
                         answer += str(nonce) + "\r\n\r\n"
-                        self.wfile.write(bytes(answer, 'utf-8'))
+                        self.wfile.write(bytes(answer, 'utf-8') + b'\r\n')
 
             elif method_client == "INVITE":
                 # Enviamos INVITE a destinatorio correspondiente
@@ -193,6 +199,8 @@ if __name__ == "__main__":
     print("NOMBRE DEL SERVIDOR:  ", NAME_SERVER)
     ip = line_server[0].split("=")[2]
     IP_SERVER = ip.split(" ")[0][1:-1]
+    if not IP_SERVER:
+        IP_SERVER = "127.0.0.1"
     print("IP DEL SERVIDOR:  ", IP_SERVER)
     puerto = line_server[0].split("=")[3]
     PUERTO_SERVER = puerto.split(" ")[0][1:-2]
