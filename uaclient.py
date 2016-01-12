@@ -9,6 +9,7 @@ Programa Cliente
 import sys
 import socket
 import hashlib
+import os
 
 try:
     CONFIG = sys.argv[1]
@@ -126,3 +127,18 @@ elif data[0] == "SIP/2.0 100 Trying":
     LINE = METHOD + ' sip:' + OPTION + ' SIP/2.0\r\n'
     print("Enviando: \r\n" + LINE)
     my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+    # Envio RTP
+    # aEjecutar es un string con lo que se ha de ejecutar en la shell
+    print(data[9])
+
+    IP_RTP = data[9].split(' ')[-1]
+    print(IP_RTP)
+    PUERTO_RTP = data[12].split(' ')[-2]
+    print(PUERTO_RTP)
+    aEjecutar = "./mp32rtp -i " + IP_RTP + " -p " + PUERTO_RTP
+    aEjecutar += " < " + PATH_AUDIO
+    print("Vamos a ejecutar", aEjecutar)
+    os.system(aEjecutar)
+
+
+
