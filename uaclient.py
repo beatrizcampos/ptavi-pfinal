@@ -99,7 +99,7 @@ print("Enviando: \r\n" + LINE)
 my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
 # Recibimos respuesta
 data = my_socket.recv(1024)
-print('Recibido: \r\n', data.decode('utf-8'))
+print("Recibido: \r\n", data.decode('utf-8'))
 
 
 # Estudiamos respuesta
