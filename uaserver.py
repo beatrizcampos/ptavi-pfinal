@@ -9,6 +9,7 @@ Programa User Agent Server
 import sys
 import socketserver
 import socket
+import os
 
 try:
     CONFIG = sys.argv[1]
@@ -44,6 +45,8 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                 PUERTO_RTPDESTINO = linea_deco[7].split(" ")[-1]
                 print(IP_RTPDESTINO)
                 print(str(PUERTO_RTPDESTINO))
+                self.RTP["ip"] = IP_RTPDESTINO
+                self.RTP["puerto"] = PUERTO_RTPDESTINO
                 answer = ("SIP/2.0 100 Trying" + '\r\n\r\n' +
                           "SIP/2.0 180 Ringing" + '\r\n\r\n' +
                           "SIP/2.0 200 OK" + '\r\n\r\n')
@@ -60,8 +63,9 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                 self.wfile.write(bytes(answer, 'utf-8'))
 
             elif method_client == "ACK":
-                #Comenzamos envio RTP                
-                aEjecutar = "./mp32rtp -i " + IP_RTPDESTINO + " -p " + PUERTO_RTPDESTINO
+                #Comenzamos envio RTP
+                aEjecutar = "./mp32rtp -i " + self.RTP["ip"]
+                aEjecutar += " -p " + self.RTP["puerto"]
                 aEjecutar += " < " + PATH_AUDIO
                 print("Vamos a ejecutar", aEjecutar)
                 os.system(aEjecutar)
