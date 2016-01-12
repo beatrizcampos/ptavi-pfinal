@@ -166,6 +166,9 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                                          socket.SO_REUSEADDR, 1)
                     my_socket.connect((IP_DESTINO, int(PUERTO_DESTINO)))
                     my_socket.send(line)
+                    data = my_socket.recv(1024)
+                    print('Recibimos: \r\n', data.decode('utf-8'))
+                    self.wfile.write(data + b'\r\n')
 
                 else:
                     # Usuario no registrado
