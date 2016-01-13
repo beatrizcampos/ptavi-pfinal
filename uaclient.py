@@ -12,14 +12,6 @@ import hashlib
 import os
 import time
 
-try:
-    CONFIG = sys.argv[1]
-    METHOD = sys.argv[2]
-    OPTION = sys.argv[3]
-
-except IndexError:
-    sys.exit("Usage: python uaclient.py config method option")
-
 
 def hora_actual():
 
@@ -34,11 +26,11 @@ def fich_log(fichero, evento, ip, puerto, texto):
 
     if evento == "sent_to":
         fich.write(" Sent to " + ip
-                   + ":" + str(puerto) + ":" + texto + "\r\n")
+                   + ":" + str(puerto) + ":  " + texto + "\r\n")
 
     elif evento == "received":
         fich.write(" Received from " + ip + ":"
-                   + str(puerto) + ":" + texto + "\r\n")
+                   + str(puerto) + ":  " + texto + "\r\n")
 
     elif evento == "error":
         fich.write(texto + '\r\n')
@@ -56,6 +48,13 @@ if __name__ == "__main__":
     """
     Cliente UDP simple.
     """
+    try:
+        CONFIG = sys.argv[1]
+        METHOD = sys.argv[2]
+        OPTION = sys.argv[3]
+
+    except IndexError:
+        sys.exit("Usage: python uaclient.py config method option")
 
     # Abrimos fichero xml para coger informacion
     fich = open(CONFIG, 'r')
