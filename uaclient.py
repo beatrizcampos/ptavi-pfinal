@@ -10,6 +10,7 @@ import sys
 import socket
 import hashlib
 import os
+import time
 
 try:
     CONFIG = sys.argv[1]
@@ -18,6 +19,41 @@ try:
 
 except IndexError:
     sys.exit("Usage: python uaclient.py config method option")
+
+
+def hora_actual():
+
+    time_actual = time.time()
+    return time.strftime("%Y%m%d%H%M%S", time.gmtime(time_actual))
+
+
+def fich_log(fichero, evento, ip, puerto, texto):
+
+    fich = open(fichero, 'a')
+    hora = txt.write(Get_Time())
+
+    if evento == "sent_to":
+        fich.write(hora + " Sent to " + ip
+                   + ":" + puerto + ":" + texto + "\r\n")
+
+    elif evento == "received":
+        fich.write(hora + " Received from " + ip + ":"
+                   + puerto + ":" + texto + "\r\n")
+
+    elif evento == "error":
+        fich.write(hora + text + '\r\n')
+
+    elif evento == "starting":
+        fich.write(hora + " Starting...\r\n")
+
+    elif evento == "finishing":
+        fich.write(hora + "Finishing. \r\n")
+
+
+if __name__ == "__main__":
+    """
+    Cliente UDP simple.
+    """
 
 # Abrimos fichero xml para coger informacion
 fich = open(CONFIG, 'r')
@@ -139,6 +175,3 @@ elif data[0] == "SIP/2.0 100 Trying":
     aEjecutar += " < " + PATH_AUDIO
     print("Vamos a ejecutar", aEjecutar)
     os.system(aEjecutar)
-
-
-
