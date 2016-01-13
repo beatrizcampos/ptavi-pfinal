@@ -63,7 +63,7 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
 
             elif method_client == "REGISTER":
                 linea_troceada = line.decode('utf-8').split(" ")
-                
+
                 if len(linea_troceada) == 4:
                     # Enviamos: SIP/2.0 401 Unauthorized
                     direccionsip_usuario = linea_troceada[1].split(':')[1]
@@ -71,7 +71,8 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                     puerto_cliente = (linea_troceada[1].split(':')[-1])
                     data = line.decode('utf-8').split("\r\n")
                     texto = " ".join(data)
-                    fich_log(PATH_LOGSERVER, "received", IP_CLIENT, puerto_cliente, texto)
+                    fich_log(PATH_LOGSERVER, "received",
+                             IP_CLIENT, puerto_cliente, texto)
 
                     if expires > 0:
                         answer = ("SIP/2.0 401 Unauthorized" + "\r\n")
@@ -81,7 +82,8 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                         print("Enviando: \r\n" + answer)
                         lista = answer.split('\r\n')
                         texto = " ".join(lista)
-                        fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, puerto_cliente, texto)
+                        fich_log(PATH_LOGSERVER, "sent_to",
+                                 IP_CLIENT, puerto_cliente, texto)
 
                     elif expires == 0:
                         # Borramos a usuario expirado
@@ -91,7 +93,8 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                         self.wfile.write((bytes(answer, 'utf-8')) + b'\r\n')
                         lista = answer.split('\r\n')
                         texto = " ".join(lista)
-                        fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, puerto_cliente, texto)
+                        fich_log(PATH_LOGSERVER, "sent_to",
+                                 IP_CLIENT, puerto_cliente, texto)
 
                 else:
                     # Comprobamos el response
@@ -102,7 +105,8 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                     response = response.split('\r')[0]
                     lista = line.decode('utf-8').split("\r\n")
                     texto = " ".join(lista)
-                    fich_log(PATH_LOGSERVER, "received", IP_CLIENT, puerto_client2, texto)
+                    fich_log(PATH_LOGSERVER, "received",
+                             IP_CLIENT, puerto_client2, texto)
                     m = hashlib.md5()
                     for usuario in passwords_usuarios.keys():
                         if usuario == direccionsip_client2:
@@ -115,7 +119,8 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                         self.wfile.write(bytes(answer, 'utf-8') + b'\r\n')
                         lista = answer.split('\r\n')
                         texto = " ".join(lista)
-                        fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, puerto_client2, texto)
+                        fich_log(PATH_LOGSERVER, "sent_to",
+                                 IP_CLIENT, puerto_client2, texto)
                         hora_actual = time.time()
                         hora_exp = hora_actual + expires
                         info = [IP_CLIENT, puerto_client2,
@@ -130,14 +135,16 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                         print("Enviando: \r\n" + answer)
                         lista = answer.split('\r\n')
                         texto = " ".join(lista)
-                        fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, PUERTO_CLIENT, texto)                                            
+                        fich_log(PATH_LOGSERVER, "sent_to",
+                                 IP_CLIENT, PUERTO_CLIENT, texto)
 
                 self.register2file()
 
             elif method_client == "INVITE":
                 data = line.decode('utf-8').split("\r\n")
                 texto = " ".join(data)
-                fich_log(PATH_LOGSERVER, "received", IP_CLIENT, PUERTO_CLIENT, texto)
+                fich_log(PATH_LOGSERVER, "received",
+                         IP_CLIENT, PUERTO_CLIENT, texto)
                 # Enviamos INVITE a destinatorio correspondiente
                 linea_troceada = line.decode('utf-8').split(" ")
                 destino_invite = linea_troceada[1].split(':')[1]
@@ -147,7 +154,8 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                     PUERTO_DEST = self.usuarios_registrados[destino_invite][1]
                     lista = line.decode("utf-8").split('\r\n')
                     texto = " ".join(lista)
-                    fich_log(PATH_LOGSERVER, "sent_to", IP_DESTINO, PUERTO_DEST, texto)
+                    fich_log(PATH_LOGSERVER, "sent_to",
+                             IP_DESTINO, PUERTO_DEST, texto)
                     # Creamos socket
                     my_socket = socket.socket(socket.AF_INET,
                                               socket.SOCK_DGRAM)
@@ -159,14 +167,16 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                     print("Recibido: \r\n", data.decode('utf-8'))
                     lista = data.decode('utf-8').split("\r\n")
                     texto = " ".join(lista)
-                    fich_log(PATH_LOGSERVER, "received", IP_DESTINO, PUERTO_DEST, texto)
+                    fich_log(PATH_LOGSERVER, "received",
+                             IP_DESTINO, PUERTO_DEST, texto)
                     # Reenviamos al cliente
                     self.wfile.write(data)
                     print("Enviando: \r\n" + data.decode("utf-8"))
                     data = data.decode('utf-8').split("\r\n")
                     texto = " ".join(data)
-                    fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, PUERTO_CLIENT, texto)
-                    
+                    fich_log(PATH_LOGSERVER, "sent_to",
+                             IP_CLIENT, PUERTO_CLIENT, texto)
+
                 else:
                     # Usuario no registrado
                     answer = "SIP/2.0 404 User Not Found\r\n"
@@ -174,12 +184,14 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                     print("Enviando: \r\n" + answer)
                     lista = answer.split('\r\n')
                     texto = " ".join(lista)
-                    fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, PUERTO_CLIENT, texto)    
+                    fich_log(PATH_LOGSERVER, "sent_to",
+                             IP_CLIENT, PUERTO_CLIENT, texto)
 
             elif method_client == "ACK":
                 data = line.decode('utf-8').split("\r\n")
                 texto = " ".join(data)
-                fich_log(PATH_LOGSERVER, "received", IP_CLIENT, PUERTO_CLIENT, texto)
+                fich_log(PATH_LOGSERVER, "received",
+                         IP_CLIENT, PUERTO_CLIENT, texto)
                 linea_troceada = line.decode('utf-8').split(" ")
                 destino_invite = linea_troceada[1].split(':')[1]
                 IP_DESTINO = self.usuarios_registrados[destino_invite][0]
@@ -193,12 +205,14 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                 my_socket.send(line)
                 lista = line.decode("utf-8").split('\r\n')
                 texto = " ".join(lista)
-                fich_log(PATH_LOGSERVER, "sent_to", IP_DESTINO, PUERTO_DEST, texto)
+                fich_log(PATH_LOGSERVER, "sent_to",
+                         IP_DESTINO, PUERTO_DEST, texto)
 
             elif method_client == "BYE":
                 data = line.decode('utf-8').split("\r\n")
                 texto = " ".join(data)
-                fich_log(PATH_LOGSERVER, "received", IP_CLIENT, PUERTO_CLIENT, texto)
+                fich_log(PATH_LOGSERVER, "received",
+                         IP_CLIENT, PUERTO_CLIENT, texto)
                 linea_troceada = line.decode('utf-8').split(" ")
                 destino_invite = linea_troceada[1].split(':')[1]
                 print("Se lo enviamos a: ", destino_invite)
@@ -207,7 +221,8 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                     PUERTO_DEST = self.usuarios_registrados[destino_invite][1]
                     lista = line.decode("utf-8").split('\r\n')
                     texto = " ".join(lista)
-                    fich_log(PATH_LOGSERVER, "sent_to", IP_DESTINO, PUERTO_DEST, texto)
+                    fich_log(PATH_LOGSERVER, "sent_to",
+                             IP_DESTINO, PUERTO_DEST, texto)
                     # Creamos socket
                     my_socket = socket.socket(socket.AF_INET,
                                               socket.SOCK_DGRAM)
@@ -216,16 +231,18 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                     my_socket.connect((IP_DESTINO, int(PUERTO_DEST)))
                     my_socket.send(line)
                     data = my_socket.recv(1024)
-                    print('Recibimos: \r\n', data.decode('utf-8'))                    
+                    print('Recibimos: \r\n', data.decode('utf-8'))
                     lista = data.decode('utf-8').split("\r\n")
                     texto = " ".join(lista)
-                    fich_log(PATH_LOGSERVER, "received", IP_DESTINO, PUERTO_DEST, texto)
+                    fich_log(PATH_LOGSERVER, "received",
+                             IP_DESTINO, PUERTO_DEST, texto)
                     # Reenviamos al cliente
                     self.wfile.write(data)
                     print("Enviando: \r\n" + answer)
                     data = data.decode('utf-8').split("\r\n")
                     texto = " ".join(data)
-                    fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, PUERTO_CLIENT, texto)
+                    fich_log(PATH_LOGSERVER, "sent_to",
+                             IP_CLIENT, PUERTO_CLIENT, texto)
 
                 else:
                     # Usuario no registrado
@@ -234,7 +251,8 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                     print("Enviando: \r\n" + answer)
                     lista = answer.split('\r\n')
                     texto = " ".join(lista)
-                    fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, PUERTO_CLIENT, texto) 
+                    fich_log(PATH_LOGSERVER, "sent_to",
+                             IP_CLIENT, PUERTO_CLIENT, texto)
             else:
 
                 answer = ("SIP/2.0 400 Bad Request" + '\r\n\r\n')
@@ -242,7 +260,8 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                 print("Enviando: \r\n" + answer)
                 lista = answer.split('\r\n')
                 texto = " ".join(lista)
-                fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, PUERTO_CLIENT, texto) 
+                fich_log(PATH_LOGSERVER, "sent_to",
+                         IP_CLIENT, PUERTO_CLIENT, texto)
 
 
 if __name__ == "__main__":
