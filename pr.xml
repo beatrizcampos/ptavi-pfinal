@@ -1,5 +1,5 @@
 <config>
-    <sever name="ServidorFamilySimpson" ip="" puerto="8687"/>
-    <database path="./registered.txt"/>
+    <server name="ServidorFamilySimpson" ip="" puerto="8687"/>
+    <database path="./registered.txt" passwdpath="./passwords.txt"/>
     <log path="./log_pr.txt"/>
 </config>
