@@ -25,7 +25,6 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
         # Escribe dirección y puerto del cliente (de tupla client_address)
         IP_CLIENT = str(self.client_address[0])
         PUERTO_CLIENT = int(self.client_address[1])
-        #self.wfile.write(b"Hemos recibido tu peticion")
         while 1:
             # Leyendo línea a línea lo que nos envía el cliente
             line = self.rfile.read()
@@ -38,7 +37,6 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
             # Si no hay más líneas salimos del bucle infinito
             if not line:
                 break
-
 
             print("El cliente nos manda: \r\n" + line.decode('utf-8'))
             if not method_client in methods:
@@ -98,54 +96,53 @@ if __name__ == "__main__":
 
     print("Listening...")
 
-
     methods = ['INVITE', 'ACK', 'BYE']
     # Abrimos fichero xml para coger informacion
     fich = open(CONFIG, 'r')
     line = fich.readlines()
     fich.close()
 
-#Conseguimos nombre de usuario y contraseña (linea 3-xml)
-line_account = line[3].split(">")
-account = line_account[0].split("=")[1]
-USERNAME = account.split(" ")[0][1:-1]
-passw = line_account[0].split("=")[2]
-PASSWORD = passw.split(" ")[0][1:-2]
-#IP
-line_uaserver = line[4].split(">")
-uaserver = line_uaserver[0].split("=")[1]
-IP = uaserver.split(" ")[0][1:-1]
+    #Conseguimos nombre de usuario y contraseña (linea 3-xml)
+    line_account = line[3].split(">")
+    account = line_account[0].split("=")[1]
+    USERNAME = account.split(" ")[0][1:-1]
+    passw = line_account[0].split("=")[2]
+    PASSWORD = passw.split(" ")[0][1:-2]
+    #IP
+    line_uaserver = line[4].split(">")
+    uaserver = line_uaserver[0].split("=")[1]
+    IP = uaserver.split(" ")[0][1:-1]
 
-#PUERTO
-uaserver_puerto = line_uaserver[0].split("=")[2]
-PUERTO = uaserver_puerto.split(" ")[0][1:-2]
+    #PUERTO
+    uaserver_puerto = line_uaserver[0].split("=")[2]
+    PUERTO = uaserver_puerto.split(" ")[0][1:-2]
 
-#PUERTO RTP
-line_rtpaudio = line[5].split(">")
-rtpaudio = line_rtpaudio[0].split("=")[1]
-PUERTO_RTP = rtpaudio.split(" ")[0][1:-2]
+    #PUERTO RTP
+    line_rtpaudio = line[5].split(">")
+    rtpaudio = line_rtpaudio[0].split("=")[1]
+    PUERTO_RTP = rtpaudio.split(" ")[0][1:-2]
 
-#IP y PUERTO DEL PROXY
-line_regproxy = line[6].split(">")
-regproxy = line_regproxy[0].split("=")[1]
-IP_PROXY = regproxy.split(" ")[0][1:-1]
-regproxy_puerto = line_regproxy[0].split("=")[2]
-PUERTO_PROXY = regproxy_puerto.split(" ")[0][1:-2]
+    #IP y PUERTO DEL PROXY
+    line_regproxy = line[6].split(">")
+    regproxy = line_regproxy[0].split("=")[1]
+    IP_PROXY = regproxy.split(" ")[0][1:-1]
+    regproxy_puerto = line_regproxy[0].split("=")[2]
+    PUERTO_PROXY = regproxy_puerto.split(" ")[0][1:-2]
 
-#Localizacion Path log
-line_log = line[7].split(">")
-log = line_log[0].split("=")[1]
-PATH_LOG = log.split(" ")[0][1:-2]
+    #Localizacion Path log
+    line_log = line[7].split(">")
+    log = line_log[0].split("=")[1]
+    PATH_LOG = log.split(" ")[0][1:-2]
 
-#Localizacion PAth Audio
-line_audio = line[8].split(">")
-audio = line_audio[0].split("=")[1]
-PATH_AUDIO = audio.split(" ")[0][1:-2]
+    #Localizacion PAth Audio
+    line_audio = line[8].split(">")
+    audio = line_audio[0].split("=")[1]
+    PATH_AUDIO = audio.split(" ")[0][1:-2]
 
-# Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
-my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-my_socket.connect((IP_PROXY, int(PUERTO_PROXY)))
+    # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
+    my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    my_socket.connect((IP_PROXY, int(PUERTO_PROXY)))
 
-serv = socketserver.UDPServer(((IP, int(PUERTO))), ProxyHandler)
-serv.serve_forever()
+    serv = socketserver.UDPServer(((IP, int(PUERTO))), ProxyHandler)
+    serv.serve_forever()
