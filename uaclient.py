@@ -115,10 +115,9 @@ if __name__ == "__main__":
     my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     my_socket.connect((IP_PROXY, int(PUERTO_PROXY)))
 
-
     #METODO REGISTER
     if METHOD == 'REGISTER':
-        # Comenzamos a escribir fichero log 
+        # Comenzamos a escribir fichero log
         texto = ""
         fich_log(PATH_LOG, "starting", IP, PUERTO, texto)
         LINE = METHOD + ' sip:' + USERNAME + ':' + PUERTO + ' SIP/2.0\r\n'
@@ -132,7 +131,6 @@ if __name__ == "__main__":
         LINE += "s=SIP's PARTY" + "\r\n" + "t=0" + "\r\n"
         LINE += "m=audio " + PUERTO_RTP + " RTP" + "\r\n"
 
-
     elif METHOD == 'BYE':
         #BYE sip:receptor SIP/2.0
         LINE = METHOD + " sip:" + OPTION + " SIP/2.0\r\n"
@@ -140,15 +138,22 @@ if __name__ == "__main__":
     # Enviamos la petición
     print("Enviando: \r\n" + LINE)
     my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
-    # Lo escribimos en archivo log 
+    # Lo escribimos en archivo log
     lista = LINE.split('\r\n')
     texto = " ".join(lista)
     fich_log(PATH_LOG, "sent_to", IP, PUERTO, texto)
 
     # Recibimos respuesta
-    data = my_socket.recv(1024)
-    print("Recibido: \r\n", data.decode('utf-8'))
-    
+    try:
+        data = my_socket.recv(1024)
+        print("Recibido: \r\n", data.decode('utf-8'))
+
+    except socket.error:
+        texto = "Error: No server listening at " + IP_PROXY
+        texto += " port " + PUERTO_PROXY
+        fich_log(PATH_LOG, "error", IP, PUERTO, texto)
+        sys.exit(fich_log)
+
     # Estudiamos respuesta recibida y la incluimos en ficherolog
     data = data.decode('utf-8').split("\r\n")
     texto = " ".join(data)
