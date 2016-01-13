@@ -12,13 +12,8 @@ import socket
 import hashlib
 import csv
 import time
-
-
-try:
-    CONFIG = sys.argv[1]
-
-except IndexError:
-    sys.exit("Usage: python proxy_registrar.py config")
+from uaclient import hora_actual
+from uaclient import fich_log
 
 
 class ProxyHandler(socketserver.DatagramRequestHandler):
@@ -48,6 +43,7 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
     def handle(self):
         # Escribe dirección y puerto del cliente (de tupla client_address)
         IP_CLIENT = str(self.client_address[0])
+        PUERTO_CLIENT = self.client_address[1]
         print("LA IP DEL CLIENTE ES: " + IP_CLIENT)
         nonce = 898989898798989898989
         #self.wfile.write(b"Hemos recibido tu peticion")
@@ -60,29 +56,43 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                 break
 
             print("El cliente nos manda: \r\n" + line.decode('utf-8'))
+            data = line.decode('utf-8').split("\r\n")
 
-            if method_client == "REGISTER":
+            if not method_client in methods:
+                answer = ("SIP/2.0 405 Method Not Allowed" + '\r\n\r\n')
+                self.wfile.write(bytes(answer, 'utf-8'))
+
+            elif method_client == "REGISTER":
                 linea_troceada = line.decode('utf-8').split(" ")
-
+                
                 if len(linea_troceada) == 4:
                     # Enviamos: SIP/2.0 401 Unauthorized
                     direccionsip_usuario = linea_troceada[1].split(':')[1]
                     expires = int(linea_troceada[-1])
                     puerto_cliente = (linea_troceada[1].split(':')[-1])
-                    print(direccionsip_usuario)
-                    print(expires)
-                    print(puerto_cliente)
+                    data = line.decode('utf-8').split("\r\n")
+                    texto = " ".join(data)
+                    fich_log(PATH_LOGSERVER, "received", IP_CLIENT, puerto_cliente, texto)
+
                     if expires > 0:
-                        answer = ("SIP/2.0 401 Unauthorized" + '\r\n')
+                        answer = ("SIP/2.0 401 Unauthorized" + "\r\n")
                         answer += "WWW Authenticate: nonce="
                         answer += str(nonce) + "\r\n\r\n"
                         self.wfile.write(bytes(answer, 'utf-8') + b'\r\n')
+                        lista = answer.split('\r\n')
+                        texto = " ".join(lista)
+                        fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, puerto_cliente, texto)
+
                     elif expires == 0:
                         # Borramos a usuario expirado
-                        #del self.usuarios_registrados[direccionsip_client2]
-                        print("Borramos: " , direccionsip_usuario)
+                        print(self.usuarios_registrados.keys())
+                        del self.usuarios_registrados[direccionsip_usuario]
+                        print("Borramos: ", direccionsip_usuario)
                         answer = "SIP/2.0 200 OK\r\n "
                         self.wfile.write((bytes(answer, 'utf-8')) + b'\r\n')
+                        lista = answer.split('\r\n')
+                        texto = " ".join(lista)
+                        fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, puerto_cliente, texto)
 
                 else:
                     # Comprobamos el response
@@ -91,9 +101,9 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                     expires = int(linea_troceada[3].split('\r\n')[0])
                     response = linea_troceada[-1].split('=')[-1]
                     response = response.split('\r')[0]
-                    print(direccionsip_client2)
-                    print(expires)
-                    print(response)
+                    lista = line.decode('utf-8').split("\r\n")
+                    texto = " ".join(lista)
+                    fich_log(PATH_LOGSERVER, "received", IP_CLIENT, puerto_client2, texto)
                     m = hashlib.md5()
                     for usuario in passwords_usuarios.keys():
                         if usuario == direccionsip_client2:
@@ -105,72 +115,93 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                         answer = "SIP/2.0 200 OK\r\n\r\n"
                         print("Enviamos :\r\n", answer)
                         self.wfile.write(bytes(answer, 'utf-8') + b'\r\n')
-                        #Registramos al usuario
-                        #puerto = int(line[1].split(':')[2])
+                        lista = answer.split('\r\n')
+                        texto = " ".join(lista)
+                        fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, puerto_client2, texto)
                         hora_actual = time.time()
                         hora_exp = hora_actual + expires
-                        informacion = [IP_CLIENT, puerto_client2,
-                                       hora_actual, hora_exp]
-                        self.usuarios_registrados[direccionsip_client2] = informacion
+                        info = [IP_CLIENT, puerto_client2,
+                                hora_actual, hora_exp]
+                        self.usuarios_registrados[direccionsip_client2] = info
                         print(self.usuarios_registrados)
-                        self.register2file()
+                        #self.register2file()
                     else:
                         answer = "SIP/2.0 401 Unauthorized\r\n"
                         answer += "WWW Authenticate: nonce="
                         answer += str(nonce) + "\r\n\r\n"
                         self.wfile.write(bytes(answer, 'utf-8') + b'\r\n')
+                        lista = answer.split('\r\n')
+                        texto = " ".join(lista)
+                        fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, PUERTO_CLIENT, texto)                                            
+
+                self.register2file()
 
             elif method_client == "INVITE":
+                data = line.decode('utf-8').split("\r\n")
+                texto = " ".join(data)
+                fich_log(PATH_LOGSERVER, "received", IP_CLIENT, PUERTO_CLIENT, texto)
                 # Enviamos INVITE a destinatorio correspondiente
                 linea_troceada = line.decode('utf-8').split(" ")
-                destinatario_invite = linea_troceada[1].split(':')[1]
-                print("Se lo enviamos a: ", destinatario_invite)
-                if destinatario_invite in self.usuarios_registrados:
-                    IP_DESTINO = self.usuarios_registrados[destinatario_invite][0]
-                    PUERTO_DESTINO = self.usuarios_registrados[destinatario_invite][1]
-
+                destino_invite = linea_troceada[1].split(':')[1]
+                print("Se lo enviamos a: ", destino_invite)
+                if destino_invite in self.usuarios_registrados:
+                    IP_DESTINO = self.usuarios_registrados[destino_invite][0]
+                    PUERTO_DEST = self.usuarios_registrados[destino_invite][1]
+                    lista = line.decode("utf-8").split('\r\n')
+                    texto = " ".join(lista)
+                    fich_log(PATH_LOGSERVER, "sent_to", IP_DESTINO, PUERTO_DEST, texto)
                     # Creamos socket
                     my_socket = socket.socket(socket.AF_INET,
                                               socket.SOCK_DGRAM)
                     my_socket.setsockopt(socket.SOL_SOCKET,
                                          socket.SO_REUSEADDR, 1)
-                    my_socket.connect((IP_DESTINO, int(PUERTO_DESTINO)))
+                    my_socket.connect((IP_DESTINO, int(PUERTO_DEST)))
                     my_socket.send(line)
                     data = my_socket.recv(1024)
+                    lista = data.decode('utf-8').split("\r\n")
+                    texto = " ".join(lista)
+                    fich_log(PATH_LOGSERVER, "received", IP_DESTINO, PUERTO_DEST, texto)
                     # Reenviamos al cliente
                     self.wfile.write(data)
+                    data = data.decode('utf-8').split("\r\n")
+                    texto = " ".join(data)
+                    fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, PUERTO_CLIENT, texto)
+                    
                 else:
                     # Usuario no registrado
                     answer = "SIP/2.0 404 User Not Found\r\n"
                     self.wfile.write(bytes(answer, 'utf-8') + b'\r\n')
+                    lista = answer.split('\r\n')
+                    texto = " ".join(lista)
+                    fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, PUERTO_CLIENT, texto)    
 
             elif method_client == "ACK":
                 linea_troceada = line.decode('utf-8').split(" ")
                 destino_invite = linea_troceada[1].split(':')[1]
                 IP_DESTINO = self.usuarios_registrados[destino_invite][0]
-                PUERTO_DESTINO = self.usuarios_registrados[destino_invite][1]
+                PUERTO_DEST = self.usuarios_registrados[destino_invite][1]
                 print("Se lo enviamos a: ", destino_invite)
-                print("con IP: ", IP_DESTINO, " y PUERTO: ", PUERTO_DESTINO)
+                print("con IP: ", IP_DESTINO, " y PUERTO: ", PUERTO_DEST)
                 # Creamos socket
                 my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                my_socket.connect((IP_DESTINO, int(PUERTO_DESTINO)))
+                my_socket.connect((IP_DESTINO, int(PUERTO_DEST)))
                 my_socket.send(line)
 
             elif method_client == "BYE":
                 linea_troceada = line.decode('utf-8').split(" ")
-                destinatario_invite = linea_troceada[1].split(':')[1]
-                print("Se lo enviamos a: ", destinatario_invite)
-                if destinatario_invite in self.usuarios_registrados:
-                    IP_DESTINO = self.usuarios_registrados[destinatario_invite][0]
-                    PUERTO_DESTINO = self.usuarios_registrados[destinatario_invite][1]
+                destino_invite = linea_troceada[1].split(':')[1]
+                print("Se lo enviamos a: ", destino_invite)
+                if destino_invite in self.usuarios_registrados:
+                    IP_DESTINO = self.usuarios_registrados[destino_invite][0]
+                    PUERTO_DEST = self.usuarios_registrados[destino_invite][1]
 
                     # Creamos socket
                     my_socket = socket.socket(socket.AF_INET,
                                               socket.SOCK_DGRAM)
                     my_socket.setsockopt(socket.SOL_SOCKET,
                                          socket.SO_REUSEADDR, 1)
-                    my_socket.connect((IP_DESTINO, int(PUERTO_DESTINO)))
+                    my_socket.connect((IP_DESTINO, int(PUERTO_DEST)))
                     my_socket.send(line)
                     data = my_socket.recv(1024)
                     print('Recibimos: \r\n', data.decode('utf-8'))
@@ -180,13 +211,23 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                     # Usuario no registrado
                     answer = "SIP/2.0 404 User Not Found\r\n"
                     self.wfile.write(bytes(answer, 'utf-8') + b'\r\n')
+            else:
+
+                answer = ("SIP/2.0 400 Bad Request" + '\r\n\r\n')
+                self.wfile.write(bytes(answer, 'utf-8'))
 
 
 if __name__ == "__main__":
     """
     Creamos servidor eco y escuchamos
     """
+    try:
+        CONFIG = sys.argv[1]
 
+    except IndexError:
+        sys.exit("Usage: python proxy_registrar.py config")
+
+    methods = ['REGISTER', 'INVITE', 'ACK', 'BYE']
     # Abrimos fichero xml para coger informacion
     fich = open(CONFIG, 'r')
     line = fich.readlines()
