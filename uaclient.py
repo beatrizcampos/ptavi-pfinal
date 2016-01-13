@@ -47,7 +47,7 @@ def fich_log(fichero, evento, ip, puerto, texto):
         fich.write(" Starting... \r\n")
 
     elif evento == "finishing":
-        fich.write("Finishing. \r\n")
+        fich.write(" Finishing. \r\n")
 
     fich.close()
 
@@ -151,8 +151,7 @@ if __name__ == "__main__":
     
     # Estudiamos respuesta recibida y la incluimos en ficherolog
     data = data.decode('utf-8').split("\r\n")
-    lista = data.split('\r\n')
-    texto = " ".join(lista)
+    texto = " ".join(data)
     fich_log(PATH_LOG, "received", IP, PUERTO, texto)
 
     if data[0] == "SIP/2.0 401 Unauthorized":
@@ -165,6 +164,9 @@ if __name__ == "__main__":
         LINE += "Authorization: response=" + m.hexdigest() + "\r\n"
         print("Enviando: \r\n" + LINE)
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+        lista = LINE.split('\r\n')
+        texto = " ".join(lista)
+        fich_log(PATH_LOG, "sent_to", IP, PUERTO, texto)
         data = my_socket.recv(1024)
         print(data.decode('utf-8'))
 
@@ -174,6 +176,10 @@ if __name__ == "__main__":
         LINE = METHOD + ' sip:' + OPTION + ' SIP/2.0\r\n'
         print("Enviando: \r\n" + LINE)
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+        lista = LINE.split('\r\n')
+        texto = " ".join(lista)
+        fich_log(PATH_LOG, "sent_to", IP, PUERTO, texto)
+
         # Envio RTP
         # aEjecutar es un string con lo que se ha de ejecutar en la shell
         print(data[9])
