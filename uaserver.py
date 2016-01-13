@@ -10,14 +10,9 @@ import sys
 import socketserver
 import socket
 import os
-
-try:
-    CONFIG = sys.argv[1]
-
-except IndexError:
-    sys.exit("Usage: python uaserver.py config")
-
-print("Listening...")
+import time
+from uaclient import hora_actual
+from uaclient import fich_log
 
 
 class ProxyHandler(socketserver.DatagramRequestHandler):
@@ -29,17 +24,28 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
     def handle(self):
         # Escribe dirección y puerto del cliente (de tupla client_address)
         IP_CLIENT = str(self.client_address[0])
+        PUERTO_CLIENT = int(self.client_address[1])
         #self.wfile.write(b"Hemos recibido tu peticion")
         while 1:
             # Leyendo línea a línea lo que nos envía el cliente
             line = self.rfile.read()
             method_client = line.decode('utf-8').split(' ')[0]
             linea_deco = line.decode('utf-8').split(' ')
+            #Incluimos lo recibido en fichero log
+            texto = " ".join(line.decode('utf-8').split("\r\n"))
+            fich_log(PATH_LOG, "received", IP_CLIENT, PUERTO_CLIENT, texto)
+
             # Si no hay más líneas salimos del bucle infinito
             if not line:
                 break
+
+
             print("El cliente nos manda: \r\n" + line.decode('utf-8'))
-            if method_client == "INVITE":
+            if not method_client in methods:
+                answer = ("SIP/2.0 405 Method Not Allowed" + '\r\n\r\n')
+                self.wfile.write(bytes(answer, 'utf-8'))
+
+            elif method_client == "INVITE":
                 # Mandamos código respuesta
                 IP_RTPDESTINO = linea_deco[4].split("\r\n")[0]
                 PUERTO_RTPDESTINO = linea_deco[7].split(" ")[-1]
@@ -56,11 +62,17 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                 answer += "m=audio " + PUERTO_RTP + " RTP" + "\r\n"
                 print(" Codigo respuesta a INVITE:  \r\n", answer)
                 self.wfile.write(bytes(answer, 'utf-8'))
+                lista = answer.split('\r\n')
+                texto = " ".join(lista)
+                fich_log(PATH_LOG, "sent_to", IP_CLIENT, PUERTO_CLIENT, texto)
 
             elif method_client == "BYE":
                 answer = "SIP/2.0 200 OK\r\n"
                 print(" Codigo respuesta a BYE:  \r\n", answer)
                 self.wfile.write(bytes(answer, 'utf-8'))
+                lista = answer.split('\r\n')
+                texto = " ".join(lista)
+                fich_log(PATH_LOG, "sent_to", IP_CLIENT, PUERTO_CLIENT, texto)
 
             elif method_client == "ACK":
                 #Comenzamos envio RTP
@@ -70,8 +82,26 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                 print("Vamos a ejecutar", aEjecutar)
                 os.system(aEjecutar)
 
+            else:
+                answer = ("SIP/2.0 400 Bad Request" + '\r\n\r\n')
+                self.wfile.write(bytes(answer, 'utf-8'))
+                lista = answer.split('\r\n')
+                texto = " ".join(lista)
+                fich_log(PATH_LOG, "sent_to", IP_CLIENT, PUERTO_CLIENT, texto)
+
+
 if __name__ == "__main__":
 
+    try:
+        CONFIG = sys.argv[1]
+
+    except IndexError:
+        sys.exit("Usage: python uaserver.py config")
+
+    print("Listening...")
+
+
+    methods = ['INVITE', 'ACK', 'BYE']
     # Abrimos fichero xml para coger informacion
     fich = open(CONFIG, 'r')
     line = fich.readlines()
