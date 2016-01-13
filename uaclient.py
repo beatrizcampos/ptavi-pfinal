@@ -115,12 +115,12 @@ if __name__ == "__main__":
     my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     my_socket.connect((IP_PROXY, int(PUERTO_PROXY)))
 
-    # Comenzamos a escribir fichero log 
-    texto = ""
-    fich_log(PATH_LOG, "starting", IP, PUERTO, texto)
 
     #METODO REGISTER
     if METHOD == 'REGISTER':
+        # Comenzamos a escribir fichero log 
+        texto = ""
+        fich_log(PATH_LOG, "starting", IP, PUERTO, texto)
         LINE = METHOD + ' sip:' + USERNAME + ':' + PUERTO + ' SIP/2.0\r\n'
         LINE += "Expires: " + OPTION + "\r\n"
 
@@ -132,6 +132,7 @@ if __name__ == "__main__":
         LINE += "s=SIP's PARTY" + "\r\n" + "t=0" + "\r\n"
         LINE += "m=audio " + PUERTO_RTP + " RTP" + "\r\n"
 
+
     elif METHOD == 'BYE':
         #BYE sip:receptor SIP/2.0
         LINE = METHOD + " sip:" + OPTION + " SIP/2.0\r\n"
@@ -139,12 +140,20 @@ if __name__ == "__main__":
     # Enviamos la petición
     print("Enviando: \r\n" + LINE)
     my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+    # Lo escribimos en archivo log 
+    lista = LINE.split('\r\n')
+    texto = " ".join(lista)
+    fich_log(PATH_LOG, "sent_to", IP, PUERTO, texto)
+
     # Recibimos respuesta
     data = my_socket.recv(1024)
     print("Recibido: \r\n", data.decode('utf-8'))
-
-    # Estudiamos respuesta
+    
+    # Estudiamos respuesta recibida y la incluimos en ficherolog
     data = data.decode('utf-8').split("\r\n")
+    lista = data.split('\r\n')
+    texto = " ".join(lista)
+    fich_log(PATH_LOG, "received", IP, PUERTO, texto)
 
     if data[0] == "SIP/2.0 401 Unauthorized":
         # Añadimos cabecera autenticación (FUNCION HASH)
@@ -177,3 +186,11 @@ if __name__ == "__main__":
         aEjecutar += " < " + PATH_AUDIO
         print("Vamos a ejecutar", aEjecutar)
         os.system(aEjecutar)
+
+    elif data[0] == "SIP/2.0 200 OK":
+        texto = ""
+        fich_log(PATH_LOG, "finishing", IP, PUERTO, texto)
+        print("Terminando socket...")
+        # Cerramos todo
+        my_socket.close()
+        print("Fin.")
