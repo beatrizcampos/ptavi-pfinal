@@ -44,9 +44,7 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
         # Escribe dirección y puerto del cliente (de tupla client_address)
         IP_CLIENT = str(self.client_address[0])
         PUERTO_CLIENT = self.client_address[1]
-        print("LA IP DEL CLIENTE ES: " + IP_CLIENT)
         nonce = 898989898798989898989
-        #self.wfile.write(b"Hemos recibido tu peticion")
         while 1:
             # Leyendo línea a línea lo que nos envía el cliente
             line = self.rfile.read()
@@ -61,6 +59,7 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
             if not method_client in methods:
                 answer = ("SIP/2.0 405 Method Not Allowed" + '\r\n\r\n')
                 self.wfile.write(bytes(answer, 'utf-8'))
+                print("Enviando: \r\n" + answer)
 
             elif method_client == "REGISTER":
                 linea_troceada = line.decode('utf-8').split(" ")
@@ -79,13 +78,13 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                         answer += "WWW Authenticate: nonce="
                         answer += str(nonce) + "\r\n\r\n"
                         self.wfile.write(bytes(answer, 'utf-8') + b'\r\n')
+                        print("Enviando: \r\n" + answer)
                         lista = answer.split('\r\n')
                         texto = " ".join(lista)
                         fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, puerto_cliente, texto)
 
                     elif expires == 0:
                         # Borramos a usuario expirado
-                        print(self.usuarios_registrados.keys())
                         del self.usuarios_registrados[direccionsip_usuario]
                         print("Borramos: ", direccionsip_usuario)
                         answer = "SIP/2.0 200 OK\r\n "
@@ -108,7 +107,6 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                     for usuario in passwords_usuarios.keys():
                         if usuario == direccionsip_client2:
                             password = passwords_usuarios[usuario]
-                    print(password)
                     m.update(bytes(password, 'utf-8'))
                     m.update(bytes(str(nonce), 'utf-8'))
                     if m.hexdigest() == response:
@@ -123,13 +121,13 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                         info = [IP_CLIENT, puerto_client2,
                                 hora_actual, hora_exp]
                         self.usuarios_registrados[direccionsip_client2] = info
-                        print(self.usuarios_registrados)
                         #self.register2file()
                     else:
                         answer = "SIP/2.0 401 Unauthorized\r\n"
                         answer += "WWW Authenticate: nonce="
                         answer += str(nonce) + "\r\n\r\n"
                         self.wfile.write(bytes(answer, 'utf-8') + b'\r\n')
+                        print("Enviando: \r\n" + answer)
                         lista = answer.split('\r\n')
                         texto = " ".join(lista)
                         fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, PUERTO_CLIENT, texto)                                            
@@ -158,11 +156,13 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                     my_socket.connect((IP_DESTINO, int(PUERTO_DEST)))
                     my_socket.send(line)
                     data = my_socket.recv(1024)
+                    print("Recibido: \r\n", data.decode('utf-8'))
                     lista = data.decode('utf-8').split("\r\n")
                     texto = " ".join(lista)
                     fich_log(PATH_LOGSERVER, "received", IP_DESTINO, PUERTO_DEST, texto)
                     # Reenviamos al cliente
                     self.wfile.write(data)
+                    print("Enviando: \r\n" + data.decode("utf-8"))
                     data = data.decode('utf-8').split("\r\n")
                     texto = " ".join(data)
                     fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, PUERTO_CLIENT, texto)
@@ -171,6 +171,7 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                     # Usuario no registrado
                     answer = "SIP/2.0 404 User Not Found\r\n"
                     self.wfile.write(bytes(answer, 'utf-8') + b'\r\n')
+                    print("Enviando: \r\n" + answer)
                     lista = answer.split('\r\n')
                     texto = " ".join(lista)
                     fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, PUERTO_CLIENT, texto)    
@@ -221,6 +222,7 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                     fich_log(PATH_LOGSERVER, "received", IP_DESTINO, PUERTO_DEST, texto)
                     # Reenviamos al cliente
                     self.wfile.write(data)
+                    print("Enviando: \r\n" + answer)
                     data = data.decode('utf-8').split("\r\n")
                     texto = " ".join(data)
                     fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, PUERTO_CLIENT, texto)
@@ -229,6 +231,7 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                     # Usuario no registrado
                     answer = "SIP/2.0 404 User Not Found\r\n"
                     self.wfile.write(bytes(answer, 'utf-8') + b'\r\n')
+                    print("Enviando: \r\n" + answer)
                     lista = answer.split('\r\n')
                     texto = " ".join(lista)
                     fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, PUERTO_CLIENT, texto) 
@@ -236,6 +239,7 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
 
                 answer = ("SIP/2.0 400 Bad Request" + '\r\n\r\n')
                 self.wfile.write(bytes(answer, 'utf-8'))
+                print("Enviando: \r\n" + answer)
                 lista = answer.split('\r\n')
                 texto = " ".join(lista)
                 fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, PUERTO_CLIENT, texto) 
@@ -261,30 +265,24 @@ if __name__ == "__main__":
     line_server = line[1].split(">")
     server = line_server[0].split("=")[1]
     NAME_SERVER = server.split(" ")[0][1:-1]
-    print("NOMBRE DEL SERVIDOR:  ", NAME_SERVER)
     ip = line_server[0].split("=")[2]
     IP_SERVER = ip.split(" ")[0][1:-1]
     if not IP_SERVER:
         IP_SERVER = "127.0.0.1"
-    print("IP DEL SERVIDOR:  ", IP_SERVER)
     puerto = line_server[0].split("=")[3]
     PUERTO_SERVER = puerto.split(" ")[0][1:-2]
-    print("PUERTO DEL SERVIDOR:  ", PUERTO_SERVER)
 
     # Database
     line_database = line[2].split(">")
     database = line_database[0].split("=")[1]
     PATH_DATABASE = database.split(" ")[0][1:-1]
-    print(PATH_DATABASE)
     path_password = line_database[0].split("=")[2]
     PASSWORDS_DATABASE = path_password.split("=")[0][1:-2]
-    print(PASSWORDS_DATABASE)
 
     # Fichero Log
     line_log = line[3].split(">")
     log = line_log[0].split("=")[1]
     PATH_LOGSERVER = log.split(" ")[0][1:-2]
-    print(PATH_LOGSERVER)
 
     # LEER FICHERO PASSWORD.TXT , COGER CONTRASEÑAS
     with open(PASSWORDS_DATABASE, newline='') as pwrd_fich:
@@ -293,7 +291,6 @@ if __name__ == "__main__":
         for linea in lineas:
             linea_usuario = linea[0].split(':')
             passwords_usuarios[linea_usuario[0]] = linea_usuario[-1]
-        print(passwords_usuarios)
 
     serv = socketserver.UDPServer(((IP_SERVER,
                                     int(PUERTO_SERVER))), ProxyHandler)
