@@ -162,7 +162,7 @@ if __name__ == "__main__":
         texto = " ".join(lista)
         fich_log(PATH_LOG, "sent_to", IP, PUERTO, texto)
         data = my_socket.recv(1024)
-        print("Recibido: \r\n" , data.decode('utf-8'))
+        print("Recibido: \r\n", data.decode('utf-8'))
 
     elif data[0] == "SIP/2.0 100 Trying":
         # Metodo de asentimiento. ACK sip:receptor SIP/2.0
