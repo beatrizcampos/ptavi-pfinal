@@ -176,6 +176,9 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                     fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, PUERTO_CLIENT, texto)    
 
             elif method_client == "ACK":
+                data = line.decode('utf-8').split("\r\n")
+                texto = " ".join(data)
+                fich_log(PATH_LOGSERVER, "received", IP_CLIENT, PUERTO_CLIENT, texto)
                 linea_troceada = line.decode('utf-8').split(" ")
                 destino_invite = linea_troceada[1].split(':')[1]
                 IP_DESTINO = self.usuarios_registrados[destino_invite][0]
@@ -187,15 +190,23 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                 my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 my_socket.connect((IP_DESTINO, int(PUERTO_DEST)))
                 my_socket.send(line)
+                lista = line.decode("utf-8").split('\r\n')
+                texto = " ".join(lista)
+                fich_log(PATH_LOGSERVER, "sent_to", IP_DESTINO, PUERTO_DEST, texto)
 
             elif method_client == "BYE":
+                data = line.decode('utf-8').split("\r\n")
+                texto = " ".join(data)
+                fich_log(PATH_LOGSERVER, "received", IP_CLIENT, PUERTO_CLIENT, texto)
                 linea_troceada = line.decode('utf-8').split(" ")
                 destino_invite = linea_troceada[1].split(':')[1]
                 print("Se lo enviamos a: ", destino_invite)
                 if destino_invite in self.usuarios_registrados:
                     IP_DESTINO = self.usuarios_registrados[destino_invite][0]
                     PUERTO_DEST = self.usuarios_registrados[destino_invite][1]
-
+                    lista = line.decode("utf-8").split('\r\n')
+                    texto = " ".join(lista)
+                    fich_log(PATH_LOGSERVER, "sent_to", IP_DESTINO, PUERTO_DEST, texto)
                     # Creamos socket
                     my_socket = socket.socket(socket.AF_INET,
                                               socket.SOCK_DGRAM)
@@ -204,17 +215,30 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                     my_socket.connect((IP_DESTINO, int(PUERTO_DEST)))
                     my_socket.send(line)
                     data = my_socket.recv(1024)
-                    print('Recibimos: \r\n', data.decode('utf-8'))
-                    self.wfile.write(data + b'\r\n')
+                    print('Recibimos: \r\n', data.decode('utf-8'))                    
+                    lista = data.decode('utf-8').split("\r\n")
+                    texto = " ".join(lista)
+                    fich_log(PATH_LOGSERVER, "received", IP_DESTINO, PUERTO_DEST, texto)
+                    # Reenviamos al cliente
+                    self.wfile.write(data)
+                    data = data.decode('utf-8').split("\r\n")
+                    texto = " ".join(data)
+                    fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, PUERTO_CLIENT, texto)
 
                 else:
                     # Usuario no registrado
                     answer = "SIP/2.0 404 User Not Found\r\n"
                     self.wfile.write(bytes(answer, 'utf-8') + b'\r\n')
+                    lista = answer.split('\r\n')
+                    texto = " ".join(lista)
+                    fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, PUERTO_CLIENT, texto) 
             else:
 
                 answer = ("SIP/2.0 400 Bad Request" + '\r\n\r\n')
                 self.wfile.write(bytes(answer, 'utf-8'))
+                lista = answer.split('\r\n')
+                texto = " ".join(lista)
+                fich_log(PATH_LOGSERVER, "sent_to", IP_CLIENT, PUERTO_CLIENT, texto) 
 
 
 if __name__ == "__main__":
