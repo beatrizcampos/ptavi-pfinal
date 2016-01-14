@@ -47,6 +47,7 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                 # Mandamos código respuesta
                 IP_RTPDESTINO = linea_deco[4].split("\r\n")[0]
                 PUERTO_RTPDESTINO = linea_deco[7].split(" ")[-1]
+
                 self.RTP["ip"] = IP_RTPDESTINO
                 self.RTP["puerto"] = PUERTO_RTPDESTINO
                 answer = ("SIP/2.0 100 Trying" + '\r\n\r\n' +
