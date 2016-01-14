@@ -155,7 +155,7 @@ if __name__ == "__main__":
         nonce = data[1].split("=")[-1]
         m.update(bytes(PASSWORD, 'utf-8'))
         m.update(bytes(nonce, 'utf-8'))
-        LINE += "Authorization: response=" + m.hexdigest() + "\r\n"
+        LINE += "Authorization: Digest response=" + m.hexdigest() + "\r\n"
         print("Enviando: \r\n" + LINE)
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
         lista = LINE.split('\r\n')
@@ -176,7 +176,7 @@ if __name__ == "__main__":
 
         # Envio RTP
         # aEjecutar es un string con lo que se ha de ejecutar en la shell
-        IP_RTP = data[9].split(' ')[-1]
+        IP_RTP = data[9].split(' ')[-2]
         PUERTO_RTP = data[12].split(' ')[-2]
         aEjecutar = "./mp32rtp -i " + IP_RTP + " -p " + PUERTO_RTP
         aEjecutar += " < " + PATH_AUDIO
