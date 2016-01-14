@@ -238,7 +238,7 @@ class ProxyHandler(socketserver.DatagramRequestHandler):
                              IP_DESTINO, PUERTO_DEST, texto)
                     # Reenviamos al cliente
                     self.wfile.write(data)
-                    print("Enviando: \r\n" + answer)
+                    print("Enviando: \r\n" + data.decode("utf-8"))
                     data = data.decode('utf-8').split("\r\n")
                     texto = " ".join(data)
                     fich_log(PATH_LOGSERVER, "sent_to",
